@@ -1,0 +1,56 @@
+IF OBJECT_ID('dbo.fact_trip') IS NOT NULL
+    DROP EXTERNAL TABLE dbo.fact_trip;
+GO
+
+CREATE EXTERNAL TABLE dbo.fact_trip
+WITH (
+    LOCATION    = 'star_schema/fact_trip',
+    DATA_SOURCE = [eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net],
+    FILE_FORMAT = [SynapseDelimitedTextFormat]
+)
+AS
+SELECT
+    t.trip_id,
+    CAST(t.start_at AS DATETIME2) AS start_time,
+    CAST(t.ended_at AS DATETIME2) AS end_time,
+
+    -- Trip duration in minutes
+    DATEDIFF(
+        MINUTE,
+        CAST(t.start_at AS DATETIME2),
+        CAST(t.ended_at AS DATETIME2)
+    ) AS trip_duration,
+
+    -- Rider age at time of trip
+    DATEDIFF(
+        YEAR,
+        CAST(r.[birthday] AS DATE),
+        CAST(t.start_at AS DATE)
+    ) AS rider_age_at_trip,
+
+    CAST(t.rider_id AS INT) AS rider_key,
+    t.start_station AS start_station_key,
+    t.end_station AS end_station_key,
+    CAST(t.start_at AS DATE) AS date_key
+
+FROM OPENROWSET(
+    BULK 'Staging_Trips.csv', 
+    DATA_SOURCE = 'eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net',
+    FORMAT = 'CSV',
+    PARSER_VERSION = '2.0',
+    FIRSTROW = 2
+)
+WITH (
+    trip_id        VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    rideable_type  VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    start_at       VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    ended_at       VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    start_station  VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    end_station    VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    rider_id       VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8
+) AS t
+JOIN dbo.dim_rider r
+    ON CAST(t.rider_id AS INT) = r.rider_key;
+GO
+
+SELECT TOP 50 * FROM dbo.fact_trip;

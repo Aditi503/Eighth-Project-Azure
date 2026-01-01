@@ -1,0 +1,37 @@
+IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseDelimitedTextFormat') 
+	CREATE EXTERNAL FILE FORMAT [SynapseDelimitedTextFormat] 
+	WITH ( FORMAT_TYPE = DELIMITEDTEXT ,
+	       FORMAT_OPTIONS (
+			 FIELD_TERMINATOR = ',',
+			 USE_TYPE_DEFAULT = FALSE
+			))
+GO
+
+IF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net') 
+	CREATE EXTERNAL DATA SOURCE [eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net] 
+	WITH (
+		LOCATION = 'abfss://eighthprojectfilesystem@eighthprojectaccount.dfs.core.windows.net', 
+		TYPE = HADOOP 
+	)
+GO
+
+CREATE EXTERNAL TABLE dbo.Staging_Rider (
+	[Rider_id] nvarchar(4000),
+	[First_name] nvarchar(4000),
+	[Last_name] nvarchar(4000),
+	[Address] nvarchar(4000),
+	[Birthday] nvarchar(4000),
+	[Account_start] nvarchar(4000),
+	[Account_end] nvarchar(4000),
+	[Is_member] nvarchar(100)
+	)
+	WITH (
+	LOCATION = 'Staging_Rider.csv',
+	DATA_SOURCE = [eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net],
+	FILE_FORMAT = [SynapseDelimitedTextFormat]
+	)
+GO
+
+
+SELECT TOP 100 * FROM dbo.Staging_Rider
+GO

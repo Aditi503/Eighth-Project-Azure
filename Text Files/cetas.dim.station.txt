@@ -1,0 +1,32 @@
+IF OBJECT_ID('dbo.dim_station') IS NOT NULL
+    DROP EXTERNAL TABLE [dbo].[dim_station];
+GO
+
+CREATE EXTERNAL TABLE dbo.dim_station
+WITH (
+    LOCATION    = 'star_schema/dim_station',
+    DATA_SOURCE = [eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net],
+    FILE_FORMAT = [SynapseDelimitedTextFormat]
+)  
+AS
+SELECT 
+    [station_id] AS [station_key],
+    [name] AS [station_name],
+    [latitude],
+    [longitude]
+FROM OPENROWSET(
+    BULK 'Staging_Stations.csv', 
+    DATA_SOURCE = 'eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net',
+    FORMAT = 'CSV',
+    PARSER_VERSION = '2.0',
+    FIRSTROW = 2
+) 
+WITH (
+    [station_id] VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    [name] VARCHAR(75) COLLATE Latin1_General_100_BIN2_UTF8,
+    [latitude] FLOAT,
+    [longitude] FLOAT
+) AS [stations];
+GO
+
+SELECT TOP 50 * FROM dbo.dim_station;

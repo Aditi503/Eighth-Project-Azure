@@ -1,0 +1,38 @@
+IF OBJECT_ID('dbo.dim_date') IS NOT NULL
+    DROP EXTERNAL TABLE dbo.dim_date;
+GO
+
+CREATE EXTERNAL TABLE dbo.dim_date
+WITH (
+    LOCATION    = 'star_schema/dim_date',
+    DATA_SOURCE = [eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net],
+    FILE_FORMAT = [SynapseDelimitedTextFormat]
+)
+AS
+SELECT DISTINCT
+    CAST(d AS DATE) AS date_key,
+    CAST(d AS DATE) AS full_date,
+    DAY(d)  AS day,
+    MONTH(d) AS month,
+    YEAR(d) AS year
+FROM (
+    SELECT CAST(start_at AS DATE) AS d
+FROM OPENROWSET(
+    BULK 'Staging_Trips.csv', 
+    DATA_SOURCE = 'eighthprojectfilesystem_eighthprojectaccount_dfs_core_windows_net',
+    FORMAT = 'CSV',
+    PARSER_VERSION = '2.0',
+    FIRSTROW = 2
+) 
+WITH (
+    trip_id        VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    rideable_type  VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    start_at       VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    ended_at       VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    start_station  VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    end_station    VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8,
+    rider_id       VARCHAR(50) COLLATE Latin1_General_100_BIN2_UTF8
+    ) AS t
+) x;
+
+SELECT TOP 50 * FROM dbo.dim_date;
