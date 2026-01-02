@@ -1,0 +1,20 @@
+IF OBJECT_ID('dbo.dim_station') IS NOT NULL
+    DROP EXTERNAL TABLE dbo.dim_station;
+GO
+
+CREATE EXTERNAL TABLE dbo.dim_station
+WITH (
+    LOCATION    = 'star_schema/dim_station',
+    DATA_SOURCE = eighthproject_ds,
+    FILE_FORMAT = SynapseDelimitedTextFormat
+)
+AS
+SELECT
+    station_id AS station_key,
+    station_name AS station_name,
+    latitude,
+    longitude
+FROM dbo.staging_stations;
+GO
+
+SELECT TOP 50 * FROM dbo.dim_station;

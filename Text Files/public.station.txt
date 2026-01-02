@@ -1,0 +1,15 @@
+CREATE EXTERNAL TABLE dbo.Staging_Stations (
+	[Station_id] nvarchar(4000),
+	[Station_name] nvarchar(4000),
+	[Latitude] nvarchar(4000),
+	[Longitude] nvarchar(4000)
+	)
+	WITH (
+	LOCATION = 'public.station',
+	DATA_SOURCE = eighthproject_ds,
+    FILE_FORMAT = SynapseDelimitedTextFormat
+	)
+GO
+
+SELECT TOP 100 * FROM dbo.Staging_Stations
+GO

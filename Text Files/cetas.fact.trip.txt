@@ -1,0 +1,44 @@
+IF OBJECT_ID('dbo.fact_trip') IS NOT NULL
+    DROP EXTERNAL TABLE dbo.fact_trip;
+GO
+
+CREATE EXTERNAL TABLE dbo.fact_trip
+WITH (
+    LOCATION    = 'star_schema/fact_trip',
+    DATA_SOURCE = eighthproject_ds,
+    FILE_FORMAT = SynapseDelimitedTextFormat
+)
+AS
+SELECT
+    t.trip_id,
+
+    CAST(t.start_at AS DATETIME2) AS start_time,
+    CAST(t.ended_at AS DATETIME2) AS end_time,
+
+    DATEDIFF(
+        MINUTE,
+        CAST(t.start_at AS DATETIME2),
+        CAST(t.ended_at AS DATETIME2)
+    ) AS trip_duration,
+
+    DATEDIFF(YEAR, r.birthday, CAST(t.start_at AS DATE))
+      - CASE
+            WHEN DATEADD(
+                    YEAR,
+                    DATEDIFF(YEAR, r.birthday, CAST(t.start_at AS DATE)),
+                    r.birthday
+                 ) > CAST(t.start_at AS DATE)
+            THEN 1 ELSE 0
+        END AS rider_age_at_trip,
+
+    t.rider_id  AS rider_key,
+    t.start_at  AS start_station_key,
+    t.ended_at  AS end_station_key,
+    CAST(t.start_at AS DATE) AS date_key
+
+FROM dbo.staging_trips t
+JOIN dbo.dim_rider r
+    ON t.rider_id = r.rider_key;
+GO
+
+SELECT TOP 50 * FROM dbo.fact_trip;

@@ -1,0 +1,24 @@
+IF OBJECT_ID('dbo.dim_rider') IS NOT NULL
+    DROP EXTERNAL TABLE dbo.dim_rider;
+GO
+
+CREATE EXTERNAL TABLE dbo.dim_rider
+WITH (
+    LOCATION    = 'star_schema/dim_rider',
+    DATA_SOURCE = eighthproject_ds,
+    FILE_FORMAT = SynapseDelimitedTextFormat
+)
+AS
+SELECT
+    rider_id AS rider_key,                      
+    first_name,
+    last_name,
+    address,
+    CAST(birthday AS DATE) AS birthday,
+    CAST(account_start AS DATE) AS account_start_date,
+    CAST(account_end AS DATE) AS account_end_date,
+    CAST(is_member AS BIT) AS is_member
+FROM dbo.staging_rider;
+GO
+
+SELECT TOP 50 * FROM dbo.dim_rider;

@@ -1,0 +1,15 @@
+CREATE EXTERNAL DATA SOURCE eighthproject_ds
+WITH (
+    LOCATION = 'abfss://eighthprojectfilesystem@eighthprojectaccount.dfs.core.windows.net'
+);
+
+CREATE EXTERNAL FILE FORMAT SynapseDelimitedTextFormat
+WITH (
+    FORMAT_TYPE = DELIMITEDTEXT,
+    FORMAT_OPTIONS (
+        FIELD_TERMINATOR = ',',
+        FIRST_ROW = 2,
+        USE_TYPE_DEFAULT = FALSE
+    )
+);
+GO
